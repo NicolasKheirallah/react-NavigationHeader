@@ -1,5 +1,7 @@
 import * as React from 'react';
-import { Icon, Callout, IconButton, Stack } from '@fluentui/react';
+import { Button, Popover, PopoverTrigger, PopoverSurface } from '@fluentui/react-components';
+import { Organization24Regular } from '@fluentui/react-icons';
+import { Icon } from '@fluentui/react';
 
 import type { IHeaderStrings } from '../models/IHeaderStrings';
 import type { INavigationItem } from '../models/INavigationItem';
@@ -15,8 +17,7 @@ export interface ISiteSwitcherToolProps {
 
 const SiteSwitcherTool: React.FC<ISiteSwitcherToolProps> = (props) => {
   const { strings, items, currentUrl } = props;
-  const [isCalloutVisible, setIsCalloutVisible] = React.useState(false);
-  const [buttonElement, setButtonElement] = React.useState<HTMLElement | null>(null);
+  const [open, setOpen] = React.useState(false);
 
   const siteItems = React.useMemo(() => {
     const candidates = items.filter((item) =>
@@ -27,36 +28,31 @@ const SiteSwitcherTool: React.FC<ISiteSwitcherToolProps> = (props) => {
     return candidates.length > 0 ? candidates : items.slice(0, 8);
   }, [items]);
 
+  const handleOpenChange = React.useCallback((e: unknown, data: { open: boolean }): void => {
+    setOpen(data.open);
+    if (data.open) {
+      emitNavigationTelemetry({
+        action: 'site-switcher-open',
+        level: 'service'
+      });
+    }
+  }, []);
+
   return (
     <div className={styles.headerTool}>
-      <IconButton
-        aria-expanded={isCalloutVisible}
-        aria-haspopup="dialog"
-        ariaLabel={strings.SiteSwitcherAriaLabel || 'Switch site'}
-        className={styles.headerToolButton}
-        elementRef={(el): void => setButtonElement(el)}
-        iconProps={{ iconName: 'Org' }}
-        onClick={(): void => {
-          setIsCalloutVisible(true);
-          emitNavigationTelemetry({
-            action: 'site-switcher-open',
-            level: 'service'
-          });
-        }}
-        title={strings.SiteSwitcherAriaLabel || 'Switch site'}
-      />
-
-      {isCalloutVisible ? (
-        <Callout
-          className={styles.siteSwitcherCallout}
-          gapSpace={8}
-          onDismiss={(): void => setIsCalloutVisible(false)}
-          setInitialFocus
-          target={buttonElement}
-        >
+      <Popover open={open} onOpenChange={handleOpenChange}>
+        <PopoverTrigger>
+          <Button
+            className={styles.headerToolButton}
+            icon={<Organization24Regular />}
+            appearance="subtle"
+            title={strings.SiteSwitcherAriaLabel || 'Switch site'}
+          />
+        </PopoverTrigger>
+        <PopoverSurface className={styles.siteSwitcherCallout}>
           <div className={styles.siteSwitcherContent}>
             <h3 className={styles.calloutTitle}>{strings.SiteSwitcherAriaLabel || 'Switch site'}</h3>
-            <Stack tokens={{ childrenGap: 4 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               {siteItems.map((item) => (
                 <a
                   key={item.id}
@@ -76,10 +72,10 @@ const SiteSwitcherTool: React.FC<ISiteSwitcherToolProps> = (props) => {
                   <span>{item.label}</span>
                 </a>
               ))}
-            </Stack>
+            </div>
           </div>
-        </Callout>
-      ) : null}
+        </PopoverSurface>
+      </Popover>
     </div>
   );
 };

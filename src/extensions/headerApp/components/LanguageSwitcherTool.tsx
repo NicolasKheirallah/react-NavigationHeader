@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { Callout, IconButton, Stack } from '@fluentui/react';
-
+import { Button, Popover, PopoverTrigger, PopoverSurface } from '@fluentui/react-components';
+import { Globe24Regular } from '@fluentui/react-icons';
 import type { IHeaderStrings } from '../models/IHeaderStrings';
 import type { ILanguageOption } from '../models/IHeaderServices';
 import { emitNavigationTelemetry } from '../utils/navigationTelemetry';
@@ -15,15 +15,14 @@ export interface ILanguageSwitcherToolProps {
 
 const LanguageSwitcherTool: React.FC<ILanguageSwitcherToolProps> = (props) => {
   const { strings, languages, currentLanguage, onChangeLanguage } = props;
-  const [isCalloutVisible, setIsCalloutVisible] = React.useState(false);
-  const [buttonElement, setButtonElement] = React.useState<HTMLElement | null>(null);
+  const [open, setOpen] = React.useState(false);
 
   const current = languages.find((lang) => lang.code === currentLanguage) || languages[0];
 
   const handleSelect = React.useCallback(
     (code: string): void => {
       onChangeLanguage(code);
-      setIsCalloutVisible(false);
+      setOpen(false);
       emitNavigationTelemetry({
         action: 'language-change',
         level: 'service',
@@ -39,30 +38,21 @@ const LanguageSwitcherTool: React.FC<ILanguageSwitcherToolProps> = (props) => {
 
   return (
     <div className={styles.headerTool}>
-      <IconButton
-        aria-expanded={isCalloutVisible}
-        aria-haspopup="dialog"
-        ariaLabel={strings.LanguageSwitcherAriaLabel || 'Change language'}
-        className={styles.headerToolButton}
-        elementRef={(el): void => setButtonElement(el)}
-        iconProps={{ iconName: 'Globe' }}
-        onClick={(): void => setIsCalloutVisible(!isCalloutVisible)}
-        title={`${strings.LanguageSwitcherAriaLabel || 'Change language'} (${current?.shortLabel || currentLanguage})`}
-      >
-        <span className={styles.languageShortLabel}>{current?.shortLabel || currentLanguage}</span>
-      </IconButton>
-
-      {isCalloutVisible ? (
-        <Callout
-          className={styles.languageCallout}
-          gapSpace={8}
-          onDismiss={(): void => setIsCalloutVisible(false)}
-          setInitialFocus
-          target={buttonElement}
-        >
+      <Popover open={open} onOpenChange={(e, data) => setOpen(data.open)}>
+        <PopoverTrigger>
+          <Button
+            className={styles.headerToolButton}
+            icon={<Globe24Regular />}
+            appearance="subtle"
+            title={`${strings.LanguageSwitcherAriaLabel || 'Change language'} (${current?.shortLabel || currentLanguage})`}
+          >
+            <span className={styles.languageShortLabel}>{current?.shortLabel || currentLanguage}</span>
+          </Button>
+        </PopoverTrigger>
+        <PopoverSurface className={styles.languageCallout}>
           <div className={styles.languageContent}>
             <h3 className={styles.calloutTitle}>{strings.LanguageSwitcherAriaLabel || 'Language'}</h3>
-            <Stack tokens={{ childrenGap: 4 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               {languages.map((language) => (
                 <button
                   key={language.code}
@@ -75,10 +65,10 @@ const LanguageSwitcherTool: React.FC<ILanguageSwitcherToolProps> = (props) => {
                   <span className={styles.languageOptionCode}>{language.shortLabel}</span>
                 </button>
               ))}
-            </Stack>
+            </div>
           </div>
-        </Callout>
-      ) : null}
+        </PopoverSurface>
+      </Popover>
     </div>
   );
 };
