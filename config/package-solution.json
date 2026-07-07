@@ -8,10 +8,10 @@
     "skipFeatureDeployment": true,
     "isDomainIsolated": false,
     "developer": {
-      "name": "Contoso",
-      "websiteUrl": "https://www.contoso.com/",
-      "privacyUrl": "https://www.contoso.com/privacy",
-      "termsOfUseUrl": "https://www.contoso.com/terms-of-use",
+      "name": "Nicolas Kheirallah",
+      "websiteUrl": "https://www.Yourmodernworkplace.com/",
+      "privacyUrl": "https://www.Yourmodernworkplace.com/privacy",
+      "termsOfUseUrl": "https://www.Yourmodernworkplace.com/terms-of-use",
       "mpnId": ""
     },
     "metadata": {
