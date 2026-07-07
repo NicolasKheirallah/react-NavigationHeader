@@ -58,9 +58,7 @@ export function emitNavigationDiagnostic(detail: INavigationTelemetryDetail): vo
     typeof window !== 'undefined' &&
     window.location.hostname.indexOf('localhost') >= 0
   ) {
-
-    // eslint-disable-next-line no-console
-    console.warn('[epiroc-header]', detail.action, detail);
+    Log.info('header', `Telemetry diagnostic event emitted: ${JSON.stringify(detail)}`);
   }
 }
 

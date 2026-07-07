@@ -1,6 +1,6 @@
 define([], function() {
   return {
-    "Title": "Epiroc Header",
+    "Title": "Header",
     "NavigationLabel": "Global navigering",
     "OverviewLabel": "Översikt",
     "CurrentPageLabel": "Aktuell sida",
@@ -11,7 +11,7 @@ define([], function() {
     "OpenMenuLabel": "Öppna navigeringsmenyn",
     "CloseMenuLabel": "Stäng navigeringsmenyn",
     "LoadingLabel": "Laddar navigering",
-    "HomeAriaLabel": "Gå till Epirocs startsida",
+    "HomeAriaLabel": "Gå till startsidan",
     "BackButtonLabel": "Tillbaka",
     "ViewAllLabel": "Visa alla",
     "ViewAllForLabel": "Visa alla {0}",
