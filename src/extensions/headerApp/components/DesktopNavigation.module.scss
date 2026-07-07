@@ -11,18 +11,9 @@
   z-index: 8;
 }
 
-.desktopNavShellCollapsed {
-  inset-inline-start: 0;
-  opacity: 0;
-  pointer-events: none;
-  position: absolute;
-  top: 0;
-  transform: translateX(12px) scale(0.98);
-  transition-delay: 0s, 0s, 180ms;
-  visibility: hidden;
-  width: max-content;
-  z-index: -1;
-}
+// Collapsed state is now handled by the parent's data-nav-fits='false'
+// attribute which sets display:none on .desktopNavShell. No position:absolute,
+// no visibility:hidden, no width:max-content — just display:none.
 
 .desktopNav {
   min-width: 0;
@@ -75,9 +66,15 @@
   font: inherit;
   font-size: var(--header-font-size-body, 14px);
   font-weight: 600;
-  gap: 8px;
+  gap: 6px;
   min-height: 42px;
-  padding: 0 14px;
+  // Tightened from 0 14px: with several top-level items, per-item padding
+  // is one of the largest levers on whether the desktop nav fits inline
+  // before falling back to the hamburger. Must stay in sync with
+  // .measuringStripTrigger in HeaderShell.module.scss (the off-screen twin
+  // used to measure required nav width) — mismatched padding there would
+  // make the fit calculation wrong in either direction.
+  padding: 0 10px;
   position: relative;
   text-decoration: none;
   transition: background 220ms cubic-bezier(0.22, 1, 0.36, 1),
@@ -257,14 +254,6 @@
   padding: 20px;
 }
 
-.megaMenuOverviewEyebrow {
-  color: var(--header-subtext, #605e5c);
-  font-size: var(--header-font-size-caption, 12px);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
 .megaMenuOverviewTitle {
   color: var(--header-body-text, #323130);
   display: block;
@@ -398,7 +387,12 @@
 .megaMenuLinkList {
   display: grid;
   gap: 26px 28px;
-  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  // auto-fit (not auto-fill): a section with fewer links than fit the row's
+  // width should have its existing links stretch to fill it. auto-fill keeps
+  // the extra empty tracks around, which on a wide mega-menu leaves visible
+  // dead grid cells trailing a short section instead of the links filling
+  // the row — the same reasoning already applied to .megaMenuSections above.
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   list-style: none;
   margin: 0;
   padding: 0;
@@ -406,8 +400,9 @@
 
 .megaMenuSubList {
   list-style: none;
-  margin: 0;
+  margin: 12px 0 0;
   padding: 0;
+  padding-inline-start: 0;
 }
 
 .megaMenuLinkItem {
@@ -492,7 +487,10 @@
 .megaMenuLinkLabel {
   color: var(--header-body-text, #323130);
   font-size: var(--header-font-size-body, 14px);
-  font-weight: 700;
+  // 600 by default so bolding stays a meaningful signal reserved for the
+  // active/current states below — every link at 700 flattened that
+  // hierarchy and competed with the "Current page"/"Current section" badge.
+  font-weight: 600;
   letter-spacing: -0.01em;
   line-height: 1.4;
   display: -webkit-box;
@@ -501,17 +499,17 @@
   overflow: hidden;
 }
 
+.megaMenuLinkActive .megaMenuLinkLabel,
+.megaMenuLinkCurrent .megaMenuLinkLabel {
+  font-weight: 700;
+}
+
 .megaMenuLinkDescription {
   color: var(--header-subtext, #605e5c);
   display: block;
   font-size: var(--header-font-size-subtext, 14px);
   line-height: 1.5;
   margin-top: 5px;
-}
-
-.megaMenuSubList {
-  margin-top: 12px;
-  padding-inline-start: 0;
 }
 
 .megaMenuSubItem + .megaMenuSubItem {
@@ -891,3 +889,36 @@
     color: LinkText;
   }
 }
+
+.shimmerContainer {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.shimmerBlock {
+  height: 40px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--header-hover-background, #f3f2f1) 25%, var(--header-border, #edebe9) 37%, var(--header-hover-background, #f3f2f1) 63%);
+  background-size: 400% 100%;
+  animation: desktopShimmer 1.4s ease infinite;
+}
+
+@keyframes desktopShimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.desktopNavMenuBar {
+  display: block;
+}
+
+.megaMenuFocusArea {
+  display: block;
+}
+
+

@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Callout, IconButton, Slider, Stack, Toggle } from '@fluentui/react';
+import { Button, Popover, PopoverTrigger, PopoverSurface, Slider, Switch } from '@fluentui/react-components';
+import { Accessibility24Regular } from '@fluentui/react-icons';
 
 import type { IHeaderStrings } from '../models/IHeaderStrings';
 import { emitNavigationTelemetry } from '../utils/navigationTelemetry';
@@ -11,20 +12,21 @@ export interface IAccessibilityToolProps {
   onToggleHighContrast: () => void;
   fontScale: number;
   onChangeFontScale: (value: number) => void;
+  
+  inline?: boolean;
 }
 
 const AccessibilityTool: React.FC<IAccessibilityToolProps> = (props) => {
-  const { strings, isHighContrast, onToggleHighContrast, fontScale, onChangeFontScale } = props;
-  const [isCalloutVisible, setIsCalloutVisible] = React.useState(false);
-  const [buttonElement, setButtonElement] = React.useState<HTMLElement | null>(null);
+  const { strings, isHighContrast, onToggleHighContrast, fontScale, onChangeFontScale, inline } = props;
+  const [open, setOpen] = React.useState(false);
 
   const handleScaleChange = React.useCallback(
-    (value: number): void => {
-      onChangeFontScale(value);
+    (e: unknown, data: { value: number }): void => {
+      onChangeFontScale(data.value);
       emitNavigationTelemetry({
         action: 'accessibility-font-scale',
         level: 'service',
-        metadata: { scale: value }
+        metadata: { scale: data.value }
       });
     },
     [onChangeFontScale]
@@ -41,29 +43,22 @@ const AccessibilityTool: React.FC<IAccessibilityToolProps> = (props) => {
 
   return (
     <div className={styles.headerTool}>
-      <IconButton
-        aria-expanded={isCalloutVisible}
-        aria-haspopup="dialog"
-        ariaLabel={strings.AccessibilityToolsAriaLabel || 'Accessibility tools'}
-        className={styles.headerToolButton}
-        elementRef={(el): void => setButtonElement(el)}
-        iconProps={{ iconName: 'Accessibility' }}
-        onClick={(): void => setIsCalloutVisible(!isCalloutVisible)}
-        title={strings.AccessibilityToolsAriaLabel || 'Accessibility tools'}
-      />
+      <Popover open={open} onOpenChange={(e, data) => setOpen(data.open)} inline={inline}>
+        <PopoverTrigger>
+          <Button
+            className={styles.headerToolButton}
+            icon={<Accessibility24Regular />}
+            appearance="subtle"
+            onClick={() => setOpen(!open)}
+            title={strings.AccessibilityToolsAriaLabel || 'Accessibility tools'}
+          />
+        </PopoverTrigger>
 
-      {isCalloutVisible ? (
-        <Callout
-          className={styles.quickActionsCallout}
-          gapSpace={8}
-          onDismiss={(): void => setIsCalloutVisible(false)}
-          setInitialFocus
-          target={buttonElement}
-        >
+        <PopoverSurface className={styles.quickActionsCallout}>
           <div className={styles.quickActionsContent}>
             <h3 className={styles.calloutTitle}>{strings.AccessibilityToolsAriaLabel || 'Accessibility'}</h3>
-            <Stack tokens={{ childrenGap: 16 }}>
-              <Toggle
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <Switch
                 checked={isHighContrast}
                 label={strings.HighContrastLabel || 'High contrast'}
                 onChange={handleToggle}
@@ -82,12 +77,12 @@ const AccessibilityTool: React.FC<IAccessibilityToolProps> = (props) => {
                 />
                 <span className={styles.accessibilityValue}>{fontScale}%</span>
               </div>
-            </Stack>
+            </div>
           </div>
-        </Callout>
-      ) : null}
+        </PopoverSurface>
+      </Popover>
     </div>
   );
 };
 
-export default AccessibilityTool;
+export default React.memo(AccessibilityTool);

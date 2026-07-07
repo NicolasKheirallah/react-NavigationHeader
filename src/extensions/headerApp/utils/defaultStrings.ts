@@ -1,10 +1,5 @@
 import type { IHeaderStrings } from '../models/IHeaderStrings';
 
-/**
- * Fallback string values used when the localized resource module cannot be
- * loaded (e.g. the SPFx resource loader fails or a locale file is missing a
- * key). These mirror the keys in {@link IHeaderStrings}.
- */
 export const DEFAULT_HEADER_STRINGS: IHeaderStrings = {
   Title: 'Global Header',
   NavigationLabel: 'Global navigation',
@@ -35,9 +30,6 @@ export const DEFAULT_HEADER_STRINGS: IHeaderStrings = {
   BreadcrumbsAriaLabel: 'Breadcrumbs'
 };
 
-/**
- * Merges localized strings with the built-in defaults so every key is present.
- */
 export function getSafeStrings(strs: Partial<IHeaderStrings> | undefined): IHeaderStrings {
   return {
     ...DEFAULT_HEADER_STRINGS,

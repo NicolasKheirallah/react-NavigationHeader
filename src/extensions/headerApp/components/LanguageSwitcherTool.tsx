@@ -11,10 +11,12 @@ export interface ILanguageSwitcherToolProps {
   languages: ILanguageOption[];
   currentLanguage: string;
   onChangeLanguage: (languageCode: string) => void;
+  
+  inline?: boolean;
 }
 
 const LanguageSwitcherTool: React.FC<ILanguageSwitcherToolProps> = (props) => {
-  const { strings, languages, currentLanguage, onChangeLanguage } = props;
+  const { strings, languages, currentLanguage, onChangeLanguage, inline } = props;
   const [open, setOpen] = React.useState(false);
 
   const current = languages.find((lang) => lang.code === currentLanguage) || languages[0];
@@ -38,7 +40,7 @@ const LanguageSwitcherTool: React.FC<ILanguageSwitcherToolProps> = (props) => {
 
   return (
     <div className={styles.headerTool}>
-      <Popover open={open} onOpenChange={(e, data) => setOpen(data.open)}>
+      <Popover open={open} onOpenChange={(e, data) => setOpen(data.open)} inline={inline}>
         <PopoverTrigger>
           <Button
             className={styles.headerToolButton}
@@ -73,4 +75,4 @@ const LanguageSwitcherTool: React.FC<ILanguageSwitcherToolProps> = (props) => {
   );
 };
 
-export default LanguageSwitcherTool;
+export default React.memo(LanguageSwitcherTool);

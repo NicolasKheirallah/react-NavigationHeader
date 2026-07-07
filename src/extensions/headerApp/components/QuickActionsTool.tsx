@@ -1,8 +1,10 @@
 import * as React from 'react';
-import { Callout, Icon, IconButton, Stack, TooltipHost } from '@fluentui/react';
+import { Button, Popover, PopoverTrigger, PopoverSurface, Tooltip } from '@fluentui/react-components';
+import { MoreHorizontal24Regular } from '@fluentui/react-icons';
 
 import type { IHeaderStrings } from '../models/IHeaderStrings';
 import type { IQuickAction } from '../models/IHeaderServices';
+import { DynamicIcon } from './DynamicIcon';
 import { sanitizeUrl } from '../utils/url';
 import { emitNavigationTelemetry } from '../utils/navigationTelemetry';
 import styles from './HeaderTools.module.scss';
@@ -14,20 +16,29 @@ export interface IQuickActionsToolProps {
 
 const QuickActionsTool: React.FC<IQuickActionsToolProps> = (props) => {
   const { strings, actions } = props;
-  const [isCalloutVisible, setIsCalloutVisible] = React.useState(false);
-  const [buttonElement, setButtonElement] = React.useState<HTMLElement | null>(null);
+  const [open, setOpen] = React.useState(false);
 
   const visibleActions = actions.slice(0, 5);
+
+  const handleOpenChange = React.useCallback((e: unknown, data: { open: boolean }): void => {
+    setOpen(data.open);
+    if (data.open) {
+      emitNavigationTelemetry({
+        action: 'quick-actions-open',
+        level: 'service'
+      });
+    }
+  }, []);
 
   return (
     <div className={styles.headerTool}>
       {visibleActions.length <= 3 ? (
         visibleActions.map((action) => (
-          <TooltipHost content={action.label} key={action.id}>
-            <IconButton
-              ariaLabel={action.label}
+          <Tooltip content={action.label} relationship="label" key={action.id}>
+            <Button
               className={styles.headerToolButton}
-              iconProps={{ iconName: action.iconName }}
+              icon={<DynamicIcon iconName={action.iconName} />}
+              appearance="subtle"
               onClick={(): void => {
                 emitNavigationTelemetry({
                   action: 'quick-action-click',
@@ -39,37 +50,25 @@ const QuickActionsTool: React.FC<IQuickActionsToolProps> = (props) => {
               }}
               title={action.label}
             />
-          </TooltipHost>
+          </Tooltip>
         ))
       ) : (
         <>
-          <IconButton
-            aria-expanded={isCalloutVisible}
-            aria-haspopup="dialog"
-            ariaLabel={strings.QuickActionsAriaLabel || 'Quick actions'}
-            className={styles.headerToolButton}
-            elementRef={(el): void => setButtonElement(el)}
-            iconProps={{ iconName: 'More' }}
-            onClick={(): void => {
-              setIsCalloutVisible(true);
-              emitNavigationTelemetry({
-                action: 'quick-actions-open',
-                level: 'service'
-              });
-            }}
-            title={strings.QuickActionsAriaLabel || 'Quick actions'}
-          />
-          {isCalloutVisible ? (
-            <Callout
-              className={styles.quickActionsCallout}
-              gapSpace={8}
-              onDismiss={(): void => setIsCalloutVisible(false)}
-              setInitialFocus
-              target={buttonElement}
-            >
+          <Popover open={open} onOpenChange={handleOpenChange}>
+            <PopoverTrigger>
+              <Button
+                className={styles.headerToolButton}
+                icon={<MoreHorizontal24Regular />}
+                appearance="subtle"
+                onClick={() => setOpen(!open)}
+                title={strings.QuickActionsAriaLabel || 'Quick actions'}
+              />
+            </PopoverTrigger>
+
+            <PopoverSurface className={styles.quickActionsCallout}>
               <div className={styles.quickActionsContent}>
                 <h3 className={styles.calloutTitle}>{strings.QuickActionsAriaLabel || 'Quick actions'}</h3>
-                <Stack tokens={{ childrenGap: 4 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   {visibleActions.map((action) => (
                     <a
                       key={action.id}
@@ -85,18 +84,18 @@ const QuickActionsTool: React.FC<IQuickActionsToolProps> = (props) => {
                       }
                       target={action.target || '_self'}
                     >
-                      <Icon className={styles.quickActionIcon} iconName={action.iconName} />
+                      <DynamicIcon className={styles.quickActionIcon} iconName={action.iconName} />
                       <span>{action.label}</span>
                     </a>
                   ))}
-                </Stack>
+                </div>
               </div>
-            </Callout>
-          ) : null}
+            </PopoverSurface>
+          </Popover>
         </>
       )}
     </div>
   );
 };
 
-export default QuickActionsTool;
+export default React.memo(QuickActionsTool);

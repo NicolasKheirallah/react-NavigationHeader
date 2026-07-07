@@ -40,4 +40,4 @@ const HelpTool: React.FC<IHelpToolProps> = (props) => {
   );
 };
 
-export default HelpTool;
+export default React.memo(HelpTool);

@@ -4,14 +4,17 @@ import { Print24Regular } from '@fluentui/react-icons';
 
 import type { IHeaderStrings } from '../models/IHeaderStrings';
 import { emitNavigationTelemetry } from '../utils/navigationTelemetry';
+import { reportError } from '../utils/errorReporting';
 import styles from './HeaderTools.module.scss';
 
 export interface IPrintShareToolProps {
   strings: IHeaderStrings;
+  
+  inline?: boolean;
 }
 
 const PrintShareTool: React.FC<IPrintShareToolProps> = (props) => {
-  const { strings } = props;
+  const { strings, inline } = props;
   const [open, setOpen] = React.useState(false);
 
   const handlePrint = React.useCallback((): void => {
@@ -25,18 +28,26 @@ const PrintShareTool: React.FC<IPrintShareToolProps> = (props) => {
     setOpen(false);
 
     if (navigator.share) {
-      void navigator.share({
+      navigator.share({
         title: document.title,
         url: window.location.href
+      }).catch((error: unknown) => {
+
+        if (error instanceof Error && error.name === 'AbortError') {
+          return;
+        }
+        reportError(error, { action: 'share-failed', level: 'service' });
       });
     } else if (navigator.clipboard) {
-      void navigator.clipboard.writeText(window.location.href);
+      navigator.clipboard.writeText(window.location.href).catch((error: unknown) => {
+        reportError(error, { action: 'clipboard-copy-failed', level: 'service' });
+      });
     }
   }, []);
 
   return (
     <div className={styles.headerTool}>
-      <Popover open={open} onOpenChange={(e, data) => setOpen(data.open)}>
+      <Popover open={open} onOpenChange={(e, data) => setOpen(data.open)} inline={inline}>
         <PopoverTrigger>
           <Button
             className={styles.headerToolButton}
@@ -63,4 +74,4 @@ const PrintShareTool: React.FC<IPrintShareToolProps> = (props) => {
   );
 };
 
-export default PrintShareTool;
+export default React.memo(PrintShareTool);

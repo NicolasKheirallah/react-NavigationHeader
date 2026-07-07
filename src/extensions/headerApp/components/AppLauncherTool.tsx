@@ -1,8 +1,10 @@
 import * as React from 'react';
-import { Icon, Callout, IconButton, Stack } from '@fluentui/react';
+import { Button, Popover, PopoverTrigger, PopoverSurface } from '@fluentui/react-components';
+import { Grid24Regular } from '@fluentui/react-icons';
 
 import type { IHeaderStrings } from '../models/IHeaderStrings';
 import type { IAppLauncherItem } from '../models/IHeaderServices';
+import { DynamicIcon } from './DynamicIcon';
 import { sanitizeUrl } from '../utils/url';
 import { emitNavigationTelemetry } from '../utils/navigationTelemetry';
 import styles from './HeaderTools.module.scss';
@@ -14,15 +16,16 @@ export interface IAppLauncherToolProps {
 
 const AppLauncherTool: React.FC<IAppLauncherToolProps> = (props) => {
   const { strings, items } = props;
-  const [isCalloutVisible, setIsCalloutVisible] = React.useState(false);
-  const [buttonElement, setButtonElement] = React.useState<HTMLElement | null>(null);
+  const [open, setOpen] = React.useState(false);
 
-  const handleOpen = React.useCallback((): void => {
-    setIsCalloutVisible(true);
-    emitNavigationTelemetry({
-      action: 'app-launcher-open',
-      level: 'service'
-    });
+  const handleOpenChange = React.useCallback((e: unknown, data: { open: boolean }): void => {
+    setOpen(data.open);
+    if (data.open) {
+      emitNavigationTelemetry({
+        action: 'app-launcher-open',
+        level: 'service'
+      });
+    }
   }, []);
 
   const groupedItems = React.useMemo(() => {
@@ -37,62 +40,55 @@ const AppLauncherTool: React.FC<IAppLauncherToolProps> = (props) => {
 
   return (
     <div className={styles.headerTool}>
-      <IconButton
-        aria-expanded={isCalloutVisible}
-        aria-haspopup="dialog"
-        ariaLabel={strings.AppLauncherAriaLabel || 'App launcher'}
-        className={styles.headerToolButton}
-        elementRef={(el): void => setButtonElement(el)}
-        iconProps={{ iconName: 'Waffle' }}
-        onClick={handleOpen}
-        title={strings.AppLauncherAriaLabel || 'App launcher'}
-      />
+      <Popover open={open} onOpenChange={handleOpenChange}>
+        <PopoverTrigger>
+          <Button
+            className={styles.headerToolButton}
+            icon={<Grid24Regular />}
+            appearance="subtle"
+            onClick={() => setOpen(!open)}
+            title={strings.AppLauncherAriaLabel || 'App launcher'}
+          />
+        </PopoverTrigger>
 
-      {isCalloutVisible ? (
-        <Callout
-          className={styles.appLauncherCallout}
-          gapSpace={8}
-          onDismiss={(): void => setIsCalloutVisible(false)}
-          setInitialFocus
-          target={buttonElement}
-        >
+        <PopoverSurface className={styles.appLauncherCallout}>
           <div className={styles.appLauncherContent}>
             <h3 className={styles.calloutTitle}>{strings.AppLauncherAriaLabel || 'Apps'}</h3>
-            <Stack tokens={{ childrenGap: 16 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {Object.keys(groupedItems).map((group: string) => {
                 const groupItems = groupedItems[group];
                 return (
-                <div key={group}>
-                  <span className={styles.appLauncherGroupTitle}>{group}</span>
-                  <div className={styles.appLauncherGrid}>
-                    {groupItems.map((item: IAppLauncherItem) => (
-                      <a
-                        key={item.id}
-                        className={styles.appLauncherItem}
-                        href={sanitizeUrl(item.url) || '#'}
-                        onClick={(): void =>
-                          emitNavigationTelemetry({
-                            action: 'app-launcher-click',
-                            level: 'service',
-                            itemId: item.id,
-                            itemLabel: item.label
-                          })
-                        }
-                      >
-                        <Icon className={styles.appLauncherIcon} iconName={item.iconName} />
-                        <span>{item.label}</span>
-                      </a>
-                    ))}
+                  <div key={group}>
+                    <span className={styles.appLauncherGroupTitle}>{group}</span>
+                    <div className={styles.appLauncherGrid}>
+                      {groupItems.map((item: IAppLauncherItem) => (
+                        <a
+                          key={item.id}
+                          className={styles.appLauncherItem}
+                          href={sanitizeUrl(item.url) || '#'}
+                          onClick={(): void =>
+                            emitNavigationTelemetry({
+                              action: 'app-launcher-click',
+                              level: 'service',
+                              itemId: item.id,
+                              itemLabel: item.label
+                            })
+                          }
+                        >
+                          <DynamicIcon className={styles.appLauncherIcon} iconName={item.iconName} />
+                          <span>{item.label}</span>
+                        </a>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              );
+                );
               })}
-            </Stack>
+            </div>
           </div>
-        </Callout>
-      ) : null}
+        </PopoverSurface>
+      </Popover>
     </div>
   );
 };
 
-export default AppLauncherTool;
+export default React.memo(AppLauncherTool);
